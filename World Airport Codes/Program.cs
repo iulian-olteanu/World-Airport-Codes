@@ -147,60 +147,61 @@ namespace World_Airport_Codes
 
                 string addressUrl = String.Format("https://www.world-airport-codes.com{0}", airport.ToLower());
 
-                using (WebClient client = new WebClient())
+                try
                 {
-                    try
+                        
+                    Airport air = new Airport();
+
+                    HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
+
+                    StreamReader reader = new StreamReader(WebRequest.Create(addressUrl).GetResponse().GetResponseStream(), Encoding.UTF8); //put your encoding            
+                    doc.Load(reader);
+
+
+                    air.AirportName = sep(doc.DocumentNode.SelectSingleNode("//h1").InnerText);
+                    air.Country = sep(doc.DocumentNode.SelectSingleNode("//h3").InnerText);
+
+                    HtmlAgilityPack.HtmlNodeCollection nodes = doc.DocumentNode.SelectNodes("//tbody");
+
+                    foreach (HtmlAgilityPack.HtmlNode node in nodes)
                     {
-                        page = client.DownloadString(addressUrl);
-                        Airport air = new Airport();
 
-                        HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-                        doc.LoadHtml(page);
-
-                        air.AirportName = sep(doc.DocumentNode.SelectSingleNode("//h1").InnerText);
-                        air.Country = sep(doc.DocumentNode.SelectSingleNode("//h3").InnerText);
-
-                        HtmlAgilityPack.HtmlNodeCollection nodes = doc.DocumentNode.SelectNodes("//tbody");
-
-                        foreach (HtmlAgilityPack.HtmlNode node in nodes)
+                        foreach (HtmlAgilityPack.HtmlNode row in node.SelectNodes("tr").Descendants("th"))
                         {
+                            //Console.WriteLine("row " + row.InnerText);
+                            //Console.WriteLine("cell: " + row.NextSibling.InnerText);
 
-                            foreach (HtmlAgilityPack.HtmlNode row in node.SelectNodes("tr").Descendants("th"))
+                            switch (row.InnerText)
                             {
-                                //Console.WriteLine("row " + row.InnerText);
-                                //Console.WriteLine("cell: " + row.NextSibling.InnerText);
-
-                                switch (row.InnerText)
-                                {
-                                    case "IATA Code":
-                                        air.IATA = row.NextSibling.InnerText;
-                                        break;
-                                    case "ICAO Code":
-                                        air.ICAO = row.NextSibling.InnerText;
-                                        break;
-                                    case "FAA Code":
-                                        air.FAA = row.NextSibling.InnerText;
-                                        break;
-                                    case "Latitude":
-                                        air.Latitude = row.NextSibling.InnerText;
-                                        break;
-                                    case "Longitude":
-                                        air.Longitude = row.NextSibling.InnerText;
-                                        break;
-                                }
-
+                                case "IATA Code":
+                                    air.IATA = row.NextSibling.InnerText;
+                                    break;
+                                case "ICAO Code":
+                                    air.ICAO = row.NextSibling.InnerText;
+                                    break;
+                                case "FAA Code":
+                                    air.FAA = row.NextSibling.InnerText;
+                                    break;
+                                case "Latitude":
+                                    air.Latitude = row.NextSibling.InnerText;
+                                    break;
+                                case "Longitude":
+                                    air.Longitude = row.NextSibling.InnerText;
+                                    break;
                             }
+
                         }
-
-                        ExportData.Add(air);
-                    }
-                    catch (Exception e)
-                    {
-
-                        Console.WriteLine(e.Message);
                     }
 
+                    ExportData.Add(air);
                 }
+                catch (Exception e)
+                {
+
+                    Console.WriteLine(e.Message);
+                }
+
+                
 
             }
 
